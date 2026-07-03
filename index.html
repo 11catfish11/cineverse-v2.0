@@ -197,14 +197,17 @@ body::after{
 .portal:hover .portal-go{opacity:1; transform:scale(1);}
 .portal-go svg{width:15px; height:15px;}
 :root[dir="rtl"] .portal-go svg{transform:scaleX(-1);}
-/* the All-Movies cube sits first, next to the universes */
-.portal-all .portal-shade{background:linear-gradient(to top, rgba(6,8,12,.55) 0%, rgba(6,8,12,.12) 60%, transparent 100%);}
-.portal-all .portal-name{color:#000;}
-.portal-all .portal-meta{color:rgba(0,0,0,.7);}
-.portal-all .portal-meta .cnt{color:#000;}
-.portal-all-icon{position:absolute; top:.7rem; inset-inline-end:.8rem; z-index:2; width:30px; height:30px; color:#000; opacity:.85;}
+/* the All-Movies cube sits first, next to the universes — amber-washed photo tile */
+.portal-all .portal-media::after{content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:color-mix(in srgb, var(--accent) 22%, transparent); mix-blend-mode:overlay;}
+.portal-all .portal-shade{z-index:3; background:linear-gradient(to top, rgba(6,8,12,.94) 0%, rgba(6,8,12,.4) 55%, rgba(6,8,12,.1) 100%);}
+.portal-all .portal-name{color:#fff;}
+.portal-all .portal-meta{color:rgba(255,255,255,.75);}
+.portal-all .portal-meta .cnt{color:var(--accent);}
+.portal-all-icon{position:absolute; top:.7rem; inset-inline-end:.8rem; z-index:4; width:30px; height:30px; color:var(--accent);
+  filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 60%,transparent));}
 .portal-all-icon svg{width:100%; height:100%;}
-.portal-all .portal-go{background:#000; color:var(--accent);}
+.portal-all .portal-go{background:var(--accent); color:#000;}
 
 .home-browse{margin-top:1.6rem; display:flex; justify-content:center;}
 .browse-cta{display:inline-flex; align-items:center; gap:.6rem; font-family:inherit; font-weight:700; font-size:.92rem;
@@ -528,6 +531,16 @@ body::after{
 .nf-strip::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--accent) 22%,transparent); border-radius:99px;}
 .nf-strip::-webkit-scrollbar-track{background:transparent;}
 .nf-strip .movie-card{flex:0 0 150px; width:150px; scroll-snap-align:start;}
+.nf-strip-wrap{position:relative;}
+.nf-paddle{position:absolute; top:0; bottom:.6rem; z-index:6; width:38px; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:#fff; opacity:0; transition:.25s var(--ease);}
+.nf-strip-wrap:hover .nf-paddle{opacity:1;}
+.nf-paddle svg{width:22px; height:22px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));}
+.nf-paddle.prev{left:0; background:linear-gradient(90deg, rgba(10,14,20,.9), transparent); border-radius:var(--radius-sm) 0 0 var(--radius-sm);}
+.nf-paddle.next{right:0; background:linear-gradient(270deg, rgba(10,14,20,.9), transparent); border-radius:0 var(--radius-sm) var(--radius-sm) 0;}
+.nf-paddle.next svg{transform:scaleX(-1);}
+.nf-paddle:hover{color:var(--accent);}
+@media(hover:none){ .nf-paddle{opacity:.85;} } /* always visible on touch */
 .nf-row-title2{font-family:var(--f-display); font-weight:400; font-size:1.4rem; letter-spacing:.02em; text-transform:uppercase; color:var(--ink);
   display:flex; align-items:center; gap:.5rem;}
 .nf-row-title2::before{content:''; width:4px; height:20px; background:var(--accent); border-radius:2px;}
@@ -537,21 +550,40 @@ body::after{
   .nf-row-title,.nf-row-title2{font-size:1.2rem;}
 }
 
-/* ===================== BROWSE HERO BANNER ===================== */
-.bhero{position:relative; overflow:hidden; border-radius:var(--radius); margin:.6rem 0 1.6rem; cursor:pointer;
-  aspect-ratio:21/9; max-height:420px; border:1px solid var(--line); isolation:isolate;
-  transition:border-color .3s, box-shadow .3s;}
-.bhero:hover{border-color:color-mix(in srgb,var(--b-accent) 45%,transparent); box-shadow:0 24px 60px -24px color-mix(in srgb,var(--b-accent) 55%,rgba(0,0,0,.8));}
+/* ===================== BROWSE HERO CAROUSEL ===================== */
+.bhero{position:relative; overflow:hidden; border-radius:var(--radius); margin:.6rem 0 1.6rem;
+  aspect-ratio:21/9; max-height:440px; border:1px solid var(--line); isolation:isolate;}
+.bhero-slide{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .9s var(--ease); z-index:1;}
+.bhero-slide.on{opacity:1; pointer-events:auto; z-index:2;}
 .bhero-bg{position:absolute; inset:0; z-index:0;}
-.bhero-img{position:absolute; inset:0; z-index:1; background-size:cover; background-position:center 22%; opacity:0; transition:opacity .7s var(--ease), transform .8s var(--ease);}
+.bhero-img{position:absolute; inset:-2%; z-index:1; background-size:cover; background-position:center 22%; opacity:0; transition:opacity .8s var(--ease);}
 .bhero-img.loaded{opacity:1;}
-.bhero:hover .bhero-img.loaded{transform:scale(1.04);}
+/* slow cinematic drift while a slide is active */
+.bhero-slide.on .bhero-img{animation:kenburns 14s ease-in-out infinite alternate;}
+@keyframes kenburns{0%{transform:scale(1) translateX(0);}100%{transform:scale(1.08) translateX(-1.5%);}}
 .bhero-shade{position:absolute; inset:0; z-index:2;
   background:linear-gradient(90deg, rgba(6,8,12,.95) 0%, rgba(6,8,12,.6) 40%, rgba(6,8,12,.15) 70%, transparent 100%),
              linear-gradient(0deg, rgba(6,8,12,.9) 0%, transparent 45%);}
-:root[dir="rtl"] .bhero-shade{background:linear-gradient(270deg, rgba(6,8,12,.95) 0%, rgba(6,8,12,.6) 40%, rgba(6,8,12,.15) 70%, transparent 100%),
-             linear-gradient(0deg, rgba(6,8,12,.9) 0%, transparent 45%);}
-.bhero-content{position:absolute; z-index:3; bottom:0; inset-inline-start:0; max-width:min(560px,80%); padding:clamp(1.2rem,4vw,2.4rem);}
+.bhero-content{position:absolute; z-index:3; bottom:1.4rem; left:0; max-width:min(560px,80%); padding:clamp(1.2rem,4vw,2.4rem); cursor:pointer;}
+/* per-slide entrance choreography */
+.bhero-slide.on .bhero-kicker{animation:slideUp .6s var(--ease) both .15s;}
+.bhero-slide.on .bhero-title{animation:slideUp .65s var(--ease) both .25s;}
+.bhero-slide.on .bhero-meta{animation:slideUp .7s var(--ease) both .38s;}
+.bhero-slide.on .bhero-btn{animation:slideUp .75s var(--ease) both .5s;}
+@keyframes slideUp{from{opacity:0; transform:translateY(18px);}to{opacity:1; transform:none;}}
+.bhero-arrow{position:absolute; top:50%; transform:translateY(-50%); z-index:5; width:42px; height:42px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; opacity:0; transition:.25s var(--ease); backdrop-filter:blur(6px);}
+.bhero:hover .bhero-arrow{opacity:1;}
+.bhero-arrow:hover{background:var(--accent); color:#000; border-color:var(--accent);}
+.bhero-arrow svg{width:20px; height:20px;}
+.bhero-arrow.prev{left:1rem;}
+.bhero-arrow.next{right:1rem;}
+.bhero-arrow.next svg{transform:scaleX(-1);}
+.bhero-dots{position:absolute; bottom:1rem; right:1.4rem; z-index:5; display:flex; gap:.45rem;}
+.bhero-dot{width:22px; height:4px; border-radius:99px; border:none; cursor:pointer; padding:0;
+  background:rgba(255,255,255,.25); transition:.3s var(--ease);}
+.bhero-dot.on{background:var(--accent); width:34px; box-shadow:0 0 10px color-mix(in srgb,var(--accent) 60%,transparent);}
 .bhero-kicker{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--f-mono); font-size:.7rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:.7rem;}
 .bhero-kicker .em{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulseDot 1.8s ease-in-out infinite;}
 .bhero-title{font-family:var(--f-display); font-weight:400; font-size:clamp(2rem,6vw,3.6rem); line-height:1; letter-spacing:.01em; text-transform:uppercase; color:#fff; text-shadow:0 4px 20px rgba(0,0,0,.6);}
@@ -567,7 +599,18 @@ body::after{
   transition:transform .2s var(--ease);}
 .bhero-btn:hover{transform:translateY(-2px);}
 .bhero-btn svg{width:17px; height:17px;}
-@media(max-width:640px){ .bhero{aspect-ratio:4/3;} .bhero-content{max-width:92%;} }
+@media(max-width:640px){
+  .bhero{aspect-ratio:4/3; max-height:none;}
+  .bhero-content{max-width:94%; padding:1rem 1.1rem; bottom:1.6rem;}
+  .bhero-title{font-size:1.7rem;}
+  :lang(fa) .bhero-title{font-size:1.35rem;}
+  .bhero-meta{margin:.6rem 0 .8rem;}
+  .bhero-btn{padding:.6rem 1.2rem; font-size:.84rem;}
+  .bhero-arrow{display:none;} /* no hover on touch; swipe-adjacent dots instead */
+  .bhero-dots{left:0; right:0; justify-content:center;}
+  .browse-bar{position:static;}
+  .browse-bar-title{width:100%;}
+}
 
 /* ===================== BROWSE FILTER BAR ===================== */
 .browse-bar{position:sticky; top:49px; z-index:20; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;
@@ -601,6 +644,7 @@ body::after{
 .mc-new{font-family:var(--f-mono); font-size:.56rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
   color:#000; background:var(--accent); padding:.16rem .4rem; border-radius:var(--radius-xs); line-height:1;
   box-shadow:0 2px 8px -2px var(--accent);}
+.mc-new.soon{color:#fff; background:#7c3aed; box-shadow:0 2px 8px -2px #7c3aed;}
 .mc-imp-dot{width:8px; height:8px; border-radius:50%; box-shadow:0 0 8px currentColor;}
 .mc-imp-dot.red{color:var(--red); background:var(--red);}
 .mc-imp-dot.gold{color:var(--gold); background:var(--gold);}
@@ -770,6 +814,27 @@ body::after{
 .cast-meta{display:flex; flex-direction:column; gap:.05rem;}
 .cast-name{font-size:.68rem; font-weight:600; color:var(--ink); line-height:1.2;}
 .cast-role{font-size:.62rem; color:var(--faint); line-height:1.2;}
+
+/* watch & download links (admin-managed) */
+.dmodal-links{margin-bottom:1.3rem;}
+.link-row{display:flex; align-items:center; justify-content:space-between; gap:.7rem; padding:.55rem .7rem;
+  background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius-sm); margin-bottom:.45rem;}
+.link-label{font-family:var(--f-mono); font-size:.74rem; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;}
+.link-actions{display:flex; align-items:center; gap:.4rem; flex:0 0 auto;}
+.link-btn{display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .8rem; border-radius:var(--radius-xs);
+  font-family:inherit; font-size:.74rem; font-weight:700; cursor:pointer; text-decoration:none; border:1px solid var(--line);
+  background:var(--tap); color:var(--muted); transition:.2s var(--ease);}
+.link-btn:hover{color:var(--ink); border-color:var(--line-2);}
+.link-btn.play{background:var(--accent); color:#000; border-color:var(--accent);}
+.link-btn.play:hover{filter:brightness(1.1); color:#000;}
+.link-btn.add{background:var(--accent-soft); color:var(--accent); border-color:color-mix(in srgb,var(--accent) 35%,transparent);}
+.link-btn.danger{color:var(--red); border-color:color-mix(in srgb,var(--red) 35%,transparent); padding:.4rem .5rem;}
+.link-btn svg{width:13px; height:13px;}
+.link-add{display:flex; gap:.45rem; margin-top:.6rem; flex-wrap:wrap;}
+.link-add .auth-input{flex:1; min-width:130px; margin:0;}
+.link-player{margin-bottom:.8rem;}
+.player-tools{display:flex; justify-content:flex-end; margin-top:.4rem; font-family:var(--f-mono); font-size:.7rem; color:var(--muted);}
+.player-tools input[type=range]{accent-color:var(--accent); vertical-align:middle; margin-inline-start:.4rem;}
 
 /* modal bookmark */
 .dm-bookmark{width:38px; height:38px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.16);
@@ -1052,7 +1117,9 @@ const STR = {
     browseAllTypes: "همه", browseFilms: "فیلم‌ها", browseSeries: "سریال‌ها", browseAnim: "انیمیشن‌ها",
     browseSeeAll: "دیدن همه", badgeNew: "جدید",
     featuredLabel: "ویژه", viewDetails: "جزئیات", newestPrefix: "جدیدترین",
-    navHome: "خانه",
+    navHome: "خانه", comingSoonLabel: "به‌زودی", badgeSoon: "به‌زودی",
+    linksLabel: "تماشا و دانلود", addLink: "افزودن لینک", linkLabelPh: "برچسب (مثلاً 720p BluRay)",
+    linkUrlPh: "آدرس فایل یا صفحه", watchNow: "پخش آنلاین", download: "دانلود", removeLink: "حذف",
     hotNew: "داغ و جدید", comingSoon: "به‌زودی", badgeSoon: "به‌زودی",
     moreResults: "نتایج بیشتر از آرشیو جهانی", watchNow: "پخش آنلاین", downloadLabel: "دانلود",
     watchDownload: "تماشا و دانلود", adminLinksLabel: "مدیریت لینک‌ها", addLinkBtn: "افزودن لینک",
@@ -1159,7 +1226,9 @@ const STR = {
     browseAllTypes: "All", browseFilms: "Films", browseSeries: "Series", browseAnim: "Animation",
     browseSeeAll: "See all", badgeNew: "NEW",
     featuredLabel: "Featured", viewDetails: "Details", newestPrefix: "Newest",
-    navHome: "Home",
+    navHome: "Home", comingSoonLabel: "Coming Soon", badgeSoon: "SOON",
+    linksLabel: "Watch & Download", addLink: "Add link", linkLabelPh: "Label (e.g. 720p BluRay)",
+    linkUrlPh: "File or page URL", watchNow: "Watch online", download: "Download", removeLink: "Remove",
   }
 };
 
@@ -1947,6 +2016,117 @@ COMICS.alienpredator = [
      en:'The comic that cemented the two-monster crossover long before the films.'}),
 ];
 
+/* ---------- ANIME ---------- */
+const AN = mk('anime'), ST = mk('standalone');
+Object.assign(ERA, {
+  an_ghibli:{fa:"استودیو جیبلی", en:"Studio Ghibli"},
+  an_films:{fa:"فیلم‌های سینمایی انیمه", en:"Anime Feature Films"},
+  an_series:{fa:"سریال‌های انیمه", en:"Anime Series"},
+  st_classics:{fa:"کلاسیک‌های ماندگار", en:"Timeless Classics"},
+  st_modern:{fa:"شاهکارهای مدرن (۲۰۱۰ به بعد)", en:"Modern Masterpieces (2010+)"},
+  st_series:{fa:"سریال‌های تاریخ‌ساز", en:"Landmark Series"},
+});
+DATA.anime = [
+  AN('an_spirited','Spirited Away','2001',8.6,'animation','red','an_ghibli',['all']),
+  AN('an_mononoke','Princess Mononoke','1997',8.3,'animation','red','an_ghibli',['all']),
+  AN('an_howl','Howl’s Moving Castle','2004',8.2,'animation','gold','an_ghibli',['all']),
+  AN('an_fireflies','Grave of the Fireflies','1988',8.5,'animation','gold','an_ghibli',['all']),
+  AN('an_totoro','My Neighbor Totoro','1988',8.1,'animation','gold','an_ghibli',['all']),
+  AN('an_heron','The Boy and the Heron','2023',7.5,'animation','grey','an_ghibli',['all']),
+  AN('an_yourname','Your Name','2016',8.4,'animation','red','an_films',['all']),
+  AN('an_silentvoice','A Silent Voice','2016',8.1,'animation','gold','an_films',['all']),
+  AN('an_akira','Akira','1988',8.0,'animation','gold','an_films',['all']),
+  AN('an_gits','Ghost in the Shell','1995',7.9,'animation','gold','an_films',['all']),
+  AN('an_perfectblue','Perfect Blue','1997',8.0,'animation','gold','an_films',['all']),
+  AN('an_paprika','Paprika','2006',7.7,'animation','grey','an_films',['all']),
+  AN('an_weathering','Weathering with You','2019',7.5,'animation','grey','an_films',['all']),
+  AN('an_suzume','Suzume','2022',7.5,'animation','grey','an_films',['all']),
+  AN('an_mugentrain','Demon Slayer: Mugen Train','2020',8.2,'animation','gold','an_films',['all']),
+  AN('an_jjk0','Jujutsu Kaisen 0','2021',7.8,'animation','grey','an_films',['all']),
+  AN('an_aot','Attack on Titan','2013–2023',9.1,'series','red','an_series',['all']),
+  AN('an_deathnote','Death Note','2006–2007',8.9,'series','red','an_series',['all']),
+  AN('an_fmab','Fullmetal Alchemist: Brotherhood','2009–2010',9.1,'series','red','an_series',['all']),
+  AN('an_hxh','Hunter x Hunter','2011–2014',9.0,'series','red','an_series',['all']),
+  AN('an_bebop','Cowboy Bebop','1998–1999',8.9,'series','gold','an_series',['all']),
+  AN('an_opm','One-Punch Man','2015–2019',8.7,'series','gold','an_series',['all']),
+  AN('an_ds','Demon Slayer: Kimetsu no Yaiba','2019–2024',8.6,'series','gold','an_series',['all']),
+  AN('an_jjk','Jujutsu Kaisen','2020–2023',8.5,'series','gold','an_series',['all']),
+  AN('an_eva','Neon Genesis Evangelion','1995–1996',8.5,'series','gold','an_series',['all']),
+  AN('an_vinland','Vinland Saga','2019–2023',8.8,'series','gold','an_series',['all']),
+  AN('an_naruto','Naruto Shippuden','2007–2017',8.7,'series','grey','an_series',['all']),
+  AN('an_dbz','Dragon Ball Z','1989–1996',8.8,'series','grey','an_series',['all']),
+  AN('an_csm','Chainsaw Man','2022',8.4,'series','grey','an_series',['all']),
+  AN('an_sololeveling','Solo Leveling','2024–2025',8.3,'series','grey','an_series',['all']),
+];
+/* ---------- WORLD CINEMA (standalone must-sees) ---------- */
+DATA.standalone = [
+  ST('st_shawshank','The Shawshank Redemption','1994',9.3,'film','red','st_classics',['all']),
+  ST('st_godfather','The Godfather','1972',9.2,'film','red','st_classics',['all']),
+  ST('st_pulp','Pulp Fiction','1994',8.9,'film','red','st_classics',['all']),
+  ST('st_fightclub','Fight Club','1999',8.8,'film','red','st_classics',['all']),
+  ST('st_forrest','Forrest Gump','1994',8.8,'film','gold','st_classics',['all']),
+  ST('st_matrix','The Matrix','1999',8.7,'film','red','st_classics',['all']),
+  ST('st_goodfellas','Goodfellas','1990',8.7,'film','gold','st_classics',['all']),
+  ST('st_se7en','Se7en','1995',8.6,'film','gold','st_classics',['all']),
+  ST('st_lambs','The Silence of the Lambs','1991',8.6,'film','gold','st_classics',['all']),
+  ST('st_ryan','Saving Private Ryan','1998',8.6,'film','gold','st_classics',['all']),
+  ST('st_greenmile','The Green Mile','1999',8.6,'film','gold','st_classics',['all']),
+  ST('st_cityofgod','City of God','2002',8.6,'film','gold','st_classics',['all']),
+  ST('st_prestige','The Prestige','2006',8.5,'film','gold','st_classics',['all']),
+  ST('st_departed','The Departed','2006',8.5,'film','gold','st_classics',['all']),
+  ST('st_gladiator','Gladiator','2000',8.5,'film','gold','st_classics',['all']),
+  ST('st_memento','Memento','2000',8.4,'film','grey','st_classics',['all']),
+  ST('st_oldboy','Oldboy','2003',8.3,'film','grey','st_classics',['all']),
+  ST('st_basterds','Inglourious Basterds','2009',8.4,'film','grey','st_classics',['all']),
+  ST('st_goodwill','Good Will Hunting','1997',8.3,'film','grey','st_classics',['all']),
+  ST('st_eternal','Eternal Sunshine of the Spotless Mind','2004',8.3,'film','grey','st_classics',['all']),
+  ST('st_nocountry','No Country for Old Men','2007',8.2,'film','grey','st_classics',['all']),
+  ST('st_truman','The Truman Show','1998',8.2,'film','grey','st_classics',['all']),
+  ST('st_vendetta','V for Vendetta','2005',8.1,'film','grey','st_classics',['all']),
+  ST('st_inception','Inception','2010',8.8,'film','red','st_modern',['all']),
+  ST('st_interstellar','Interstellar','2014',8.7,'film','red','st_modern',['all']),
+  ST('st_parasite','Parasite','2019',8.5,'film','red','st_modern',['all']),
+  ST('st_whiplash','Whiplash','2014',8.5,'film','gold','st_modern',['all']),
+  ST('st_django','Django Unchained','2012',8.5,'film','gold','st_modern',['all']),
+  ST('st_intouchables','The Intouchables','2011',8.5,'film','gold','st_modern',['all']),
+  ST('st_dune2','Dune: Part Two','2024',8.5,'film','gold','st_modern',['all']),
+  ST('st_oppenheimer','Oppenheimer','2023',8.3,'film','gold','st_modern',['all']),
+  ST('st_shutter','Shutter Island','2010',8.2,'film','grey','st_modern',['all']),
+  ST('st_1917','1917','2019',8.2,'film','grey','st_modern',['all']),
+  ST('st_furyroad','Mad Max: Fury Road','2015',8.1,'film','gold','st_modern',['all']),
+  ST('st_topgun','Top Gun: Maverick','2022',8.2,'film','grey','st_modern',['all']),
+  ST('st_budapest','The Grand Budapest Hotel','2014',8.1,'film','grey','st_modern',['all']),
+  ST('st_br2049','Blade Runner 2049','2017',8.0,'film','gold','st_modern',['all']),
+  ST('st_lalaland','La La Land','2016',8.0,'film','grey','st_modern',['all']),
+  ST('st_dune1','Dune: Part One','2021',8.0,'film','gold','st_modern',['all']),
+  ST('st_her','Her','2013',8.0,'film','grey','st_modern',['all']),
+  ST('st_arrival','Arrival','2016',7.9,'film','grey','st_modern',['all']),
+  ST('st_knives','Knives Out','2019',7.9,'film','grey','st_modern',['all']),
+  ST('st_eeaao','Everything Everywhere All at Once','2022',7.8,'film','grey','st_modern',['all']),
+  ST('st_getout','Get Out','2017',7.8,'film','grey','st_modern',['all']),
+  ST('st_drive','Drive','2011',7.8,'film','grey','st_modern',['all']),
+  ST('st_quietplace','A Quiet Place','2018',7.5,'film','grey','st_modern',['all']),
+  ST('st_tenet','Tenet','2020',7.3,'film','grey','st_modern',['all']),
+  ST('st_breakingbad','Breaking Bad','2008–2013',9.5,'series','red','st_series',['all']),
+  ST('st_wire','The Wire','2002–2008',9.3,'series','red','st_series',['all']),
+  ST('st_chernobyl','Chernobyl','2019',9.3,'series','red','st_series',['all']),
+  ST('st_got','Game of Thrones','2011–2019',9.2,'series','red','st_series',['all']),
+  ST('st_sopranos','The Sopranos','1999–2007',9.2,'series','red','st_series',['all']),
+  ST('st_bcs','Better Call Saul','2015–2022',9.0,'series','gold','st_series',['all']),
+  ST('st_sherlock','Sherlock','2010–2017',9.1,'series','gold','st_series',['all']),
+  ST('st_office','The Office (US)','2005–2013',9.0,'series','gold','st_series',['all']),
+  ST('st_friends','Friends','1994–2004',8.9,'series','gold','st_series',['all']),
+  ST('st_truedetective','True Detective','2014–2024',8.9,'series','gold','st_series',['all']),
+  ST('st_peaky','Peaky Blinders','2013–2022',8.8,'series','gold','st_series',['all']),
+  ST('st_dark','Dark','2017–2020',8.7,'series','gold','st_series',['all']),
+  ST('st_severance','Severance','2022–2025',8.7,'series','gold','st_series',['all']),
+  ST('st_tlou','The Last of Us','2023–2025',8.7,'series','grey','st_series',['all']),
+  ST('st_stranger','Stranger Things','2016–2025',8.6,'series','gold','st_series',['all']),
+  ST('st_westworld','Westworld','2016–2022',8.5,'series','grey','st_series',['all']),
+  ST('st_moneyheist','Money Heist','2017–2021',8.2,'series','grey','st_series',['all']),
+  ST('st_squid','Squid Game','2021–2025',8.0,'series','grey','st_series',['all']),
+];
+
 /* ============================================================
    BRAND REGISTRY — identity for all 13 universes
    accent / a2 / deep drive the per-brand theme.
@@ -1994,8 +2174,14 @@ const BRANDS = {
   walkingdead:{fa:'مردگان متحرک', en:'The Walking Dead', tag:{fa:'دنیای پساآخرالزمانی کرکمن', en:'Kirkman’s post-apocalyptic world'},
     sub:{fa:'زنده‌ها خطرناک‌تر از مرده‌ها', en:'The living are deadlier than the dead'},
     accent:'#97a83f', a2:'#bccb6a', deep:'#25290e', logo:'WALKING DEAD', glyph:'walker', char:null},
+  anime:{fa:'انیمه', en:'Anime', tag:{fa:'بهترین‌های انیمیشن ژاپن', en:'The Best of Japanese Animation'},
+    sub:{fa:'از جیبلی تا شونن‌های حماسی', en:'From Ghibli to epic shōnen'},
+    accent:'#ff5fa2', a2:'#ff8fc0', deep:'#3d0f24', logo:'ANIME', glyph:'claw', char:null},
+  standalone:{fa:'سینمای جهان', en:'World Cinema', tag:{fa:'شاهکارهای مستقل تاریخ سینما و تلویزیون', en:'Standalone masterpieces of film & TV'},
+    sub:{fa:'از پدرخوانده تا برکینگ بد', en:'From The Godfather to Breaking Bad'},
+    accent:'#4fd1c5', a2:'#7fe3da', deep:'#0d2e2a', logo:'CINEMA', glyph:'coin', char:null},
 };
-const BRAND_ORDER = ['marvel','dc','starwars','wizarding','middleearth','monsterverse','conjuring','alienpredator','johnwick','jurassic','fastfurious','pirates','walkingdead'];
+const BRAND_ORDER = ['marvel','dc','starwars','wizarding','middleearth','monsterverse','conjuring','alienpredator','johnwick','jurassic','fastfurious','pirates','walkingdead','anime','standalone'];
 
 /* ---------- brand sigils (inline SVG, themed by currentColor) ---------- */
 function brandGlyph(g){
@@ -2050,12 +2236,16 @@ function ic(n){ return ICONS[n] || ''; }
 /* ===================== STATE ===================== */
 const state = { page:'home', brand:null, view:'all', types:new Set(['film','series','animation']), imp:'all', search:'', lang:(()=>{try{return localStorage.getItem('cv_lang')||'fa';}catch(e){return 'fa';}})(), modal:null, entryModal:null, gridView:true, sidebarOpen:false, sort:'default', person:null, browseType:'all', browseSearch:'' };
 
-/* ===================== WATCHLIST (localStorage — free, per-browser) ===================== */
-const watchlist = (() => {
-  try { return new Set(JSON.parse(localStorage.getItem('cv_watchlist') || '[]')); }
-  catch(e){ return new Set(); }
-})();
-function saveWatchlist(){ try { localStorage.setItem('cv_watchlist', JSON.stringify([...watchlist])); } catch(e){} }
+/* ===================== WATCHLIST (per-account; guests must sign in) ===================== */
+try { localStorage.removeItem('cv_watchlist'); } catch(e){} // purge the old shared/global list
+let watchlist = new Set();
+function watchlistKey(){ return auth.user ? ('cv_wl_' + auth.user) : null; }
+function loadWatchlist(){
+  const k = watchlistKey();
+  if(!k){ watchlist = new Set(); return; }
+  try { watchlist = new Set(JSON.parse(localStorage.getItem(k) || '[]')); } catch(e){ watchlist = new Set(); }
+}
+function saveWatchlist(){ const k = watchlistKey(); if(!k) return; try { localStorage.setItem(k, JSON.stringify([...watchlist])); } catch(e){} }
 function inList(id){ return watchlist.has(id); }
 function toggleList(id){
   if(watchlist.has(id)) watchlist.delete(id); else watchlist.add(id);
@@ -2084,6 +2274,7 @@ function updateListCounts(){
   document.querySelectorAll('.list-count').forEach(el => { el.textContent = locNum(n); el.hidden = (n === 0); });
 }
 function toggleBookmark(id, btnEl){
+  if(!isSignedIn()){ openAuthPanel('signin'); return; } // watchlist is per-account
   toggleList(id);
   refreshBookmarkButtons(id);
   updateListCounts();
@@ -2093,6 +2284,54 @@ function toggleBookmark(id, btnEl){
 function playTrailer(key, frameEl){
   if(!frameEl || !key) return;
   frameEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&rel=0" title="${t('trailerLabel')}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+}
+
+/* ===================== TITLE LINKS (admin-managed sources; owner/admin add, everyone uses) =====
+   Links added here live in the admin's browser (localStorage). To publish links for ALL visitors,
+   paste them into LINKS_SEED below and commit — or re-enable Firebase sync later.               */
+const LINKS_SEED = {}; // { itemId: [{label, url}] }
+function loadLinks(){ try { return Object.assign({}, LINKS_SEED, JSON.parse(localStorage.getItem('cv_links')||'{}')); } catch(e){ return Object.assign({}, LINKS_SEED); } }
+function saveLinks(map){ try { localStorage.setItem('cv_links', JSON.stringify(map)); } catch(e){} }
+function linksFor(id){ const m = loadLinks(); return m[id] || []; }
+function isDirectVideo(url){ return /\.(mp4|webm|m3u8|mov|mkv)(\?|$)/i.test(url); }
+function linksSectionHTML(item){
+  const links = linksFor(item.id);
+  const admin = isAdmin();
+  if(!links.length && !admin) return '';
+  const rows = links.map((l,i) => `
+    <div class="link-row">
+      <span class="link-label" dir="ltr">${escapeHtml(l.label||'Link')}</span>
+      <span class="link-actions">
+        ${isDirectVideo(l.url)?`<button class="link-btn play" data-playurl="${escapeHtml(l.url)}">${ic('play')}<span>${t('watchNow')}</span></button>`:''}
+        <a class="link-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener" download>${ic('arrow')}<span>${t('download')}</span></a>
+        ${admin?`<button class="link-btn danger" data-removelink="${i}" data-linkitem="${escapeHtml(item.id)}">${ic('close')}</button>`:''}
+      </span>
+    </div>`).join('');
+  const addForm = admin ? `
+    <div class="link-add">
+      <input class="auth-input" data-lf="label" type="text" placeholder="${t('linkLabelPh')}">
+      <input class="auth-input" data-lf="url" type="url" placeholder="${t('linkUrlPh')}" dir="ltr">
+      <button class="link-btn add" data-addlink="${escapeHtml(item.id)}">${t('addLink')}</button>
+    </div>` : '';
+  return `<div class="dmodal-sec-label">${t('linksLabel')}</div>
+    <div class="link-player" style="display:none"></div>
+    ${rows}${addForm}`;
+}
+function refreshLinksSection(itemId){
+  const wrap = document.querySelector('.dmodal-links');
+  const found = findEntry(itemId);
+  if(wrap && found){ wrap.innerHTML = linksSectionHTML(found.item); wrap.style.display = wrap.innerHTML ? 'block' : 'none'; }
+}
+function playDirect(url){
+  const p = document.querySelector('.link-player');
+  if(!p) return;
+  p.style.display = 'block';
+  p.innerHTML = `<video controls autoplay playsinline preload="metadata" style="width:100%;border-radius:8px;background:#000" src="${escapeHtml(url)}"></video>
+    <div class="player-tools">
+      <label>${locNum('0.5')}x–${locNum('2')}x <input type="range" min="0.5" max="2" step="0.25" value="1" data-speed></label>
+    </div>`;
+  const v = p.querySelector('video');
+  p.querySelector('[data-speed]').addEventListener('input', e => { v.playbackRate = +e.target.value; });
 }
 
 /* ===================== ACCOUNTS (localStorage — free, works on GitHub Pages) =====================
@@ -2274,6 +2513,7 @@ function getFilteredItems(){
   });
 }
 function parseYear(y){ const m = String(y).match(/\d{4}/); return m ? parseInt(m[0],10) : 0; }
+function isComingSoon(it){ const y = parseYear(it.year); return it.imdb == null && (y >= 2027 || y === 0); }
 function sortItems(arr){
   const s = state.sort;
   if(s === 'name') return [...arr].sort((a,b) => a.name.localeCompare(b.name));
@@ -2361,8 +2601,19 @@ function renderHome(){
     </div>`;
   }).join('');
   const totalTitles = BRAND_ORDER.reduce((n,id)=>n+(DATA[id]||[]).length,0);
+  const epic = allItems().filter(it=>it.imdb!=null).sort((a,b)=>b.imdb-a.imdb)[0];
+  const epicCached = epic && _backdropUrlById[epic.id];
+  const allImg = epic
+    ? (epicCached
+        ? `<div class="portal-img loaded" style="background-image:url(${epicCached})"></div>`
+        : `<div class="portal-img" data-portal-flag="${escapeHtml(epic.id)}"></div>`)
+    : '';
   const allTile = `<div class="portal portal-all reveal" data-nav="browse" role="button" tabindex="0" style="--b-accent:var(--accent); --i:0">
-      <div class="portal-media"><div class="portal-bg" style="background:linear-gradient(150deg, var(--accent), var(--accent-deep))"></div><div class="portal-shade"></div></div>
+      <div class="portal-media">
+        <div class="portal-bg" style="background:linear-gradient(150deg, var(--accent), var(--accent-deep))"></div>
+        ${allImg}
+        <div class="portal-shade"></div>
+      </div>
       <div class="portal-all-icon">${ic('layers')}</div>
       <div class="portal-content">
         <div class="portal-name">${t('navBrowse')}</div>
@@ -2628,7 +2879,9 @@ function movieCardHTML(it, brand){
   const imdbB = it.imdb != null ? `<span class="mc-imdb">${ic('star')}${locNum(it.imdb.toFixed(1))}</span>` : '';
   const grad = posterGradient(it, brand || state.brand);
   const woNum = (typeof it.wo === 'number') ? `<span class="mc-wo">${locNum(String(it.wo).padStart(2,'0'))}</span>` : '';
-  const newBadge = (parseYear(it.year) >= 2026) ? `<span class="mc-new">${t('badgeNew')}</span>` : '';
+  const newBadge = isComingSoon(it)
+    ? `<span class="mc-new soon">${t('badgeSoon')}</span>`
+    : (parseYear(it.year) >= 2026 ? `<span class="mc-new">${t('badgeNew')}</span>` : '');
   const cached = _posterUrlById[it.id];
   const bgCls = cached ? 'mc-poster-bg' : 'mc-poster-bg pending';
   const imgHtml = cached
@@ -2747,50 +3000,87 @@ function getBrowseItems(){
     return true;
   });
 }
+function stripWrap(inner){
+  return `<div class="nf-strip-wrap">
+    <button class="nf-paddle prev" data-paddle="prev" aria-label="scroll">${ic('chevron')}</button>
+    <div class="nf-strip">${inner}</div>
+    <button class="nf-paddle next" data-paddle="next" aria-label="scroll">${ic('chevron')}</button>
+  </div>`;
+}
 function nfStripRow(titleHtml, items){
   if(!items.length) return '';
   return `<div class="nf-row">
     <div class="nf-row-head"><div class="nf-row-title2">${titleHtml}</div></div>
-    <div class="nf-strip">${items.map(it => movieCardHTML(it, it.brand)).join('')}</div>
+    ${stripWrap(items.map(it => movieCardHTML(it, it.brand)).join(''))}
   </div>`;
 }
-function browseFeatured(){
-  const pool = allItems().filter(it => (it.imp==='red'||it.imp==='gold') && it.imdb!=null && parseYear(it.year)>=2021);
+function browseFeaturedList(){
+  const pool = allItems().filter(it => (it.imp==='red'||it.imp==='gold') && it.imdb!=null && parseYear(it.year)>=2019);
   pool.sort((a,b)=> parseYear(b.year)-parseYear(a.year) || (b.imdb-a.imdb));
-  return pool[0] || allItems()[0];
+  // one per universe so the carousel has variety
+  const seen = new Set(); const out = [];
+  for(const it of pool){ if(seen.has(it.brand)) continue; seen.add(it.brand); out.push(it); if(out.length===6) break; }
+  return out.length ? out : allItems().slice(0,3);
 }
-function renderBrowseHero(){
-  const it = browseFeatured(); if(!it) return '';
+function heroSlideHTML(it, i){
   const b = BRANDS[it.brand]||{};
   const typeMap = {film:t('typeFilm'),series:t('typeSeries'),animation:t('typeAnimation'),special:t('typeSpecial')};
   const cached = _backdropUrlById[it.id];
   const imgHtml = cached
-    ? `<div class="bhero-img loaded" style="background-image:url(${cached})" data-portal-flag="${escapeHtml(it.id)}"></div>`
-    : `<div class="bhero-img" data-portal-flag="${escapeHtml(it.id)}"></div>`;
+    ? `<div class="bhero-img loaded" style="background-image:url(${cached})" data-hero-flag="${escapeHtml(it.id)}"></div>`
+    : `<div class="bhero-img" data-hero-flag="${escapeHtml(it.id)}"></div>`;
   const imdb = it.imdb!=null ? `<span class="bhero-pill hi">${ic('star')}${locNum(it.imdb.toFixed(1))} IMDb</span>` : '';
-  return `<div class="bhero" data-entry-id="${escapeHtml(it.id)}" role="button" tabindex="0" style="--b-accent:${b.accent}">
+  return `<div class="bhero-slide ${i===0?'on':''}" data-slide="${i}" style="--b-accent:${b.accent}">
     <div class="bhero-bg" style="background:linear-gradient(135deg, ${b.accent}, ${b.deep||'#0a0e14'})"></div>
     ${imgHtml}
     <div class="bhero-shade"></div>
-    <div class="bhero-content">
-      <div class="bhero-kicker"><span class="em"></span>${t('featuredLabel')}</div>
+    <div class="bhero-content" data-entry-id="${escapeHtml(it.id)}" role="button" tabindex="0">
+      <div class="bhero-kicker"><span class="em"></span>${t('featuredLabel')} · ${escapeHtml(b.logo||'')}</div>
       <div class="bhero-title">${escapeHtml(it.name)}</div>
-      <div class="bhero-meta">${imdb}<span class="bhero-pill">${escapeHtml(typeMap[it.type]||it.type)}</span><span class="bhero-pill" style="color:${b.accent};border-color:color-mix(in srgb,${b.accent} 35%,transparent)">${escapeHtml(b.logo)}</span><span class="bhero-pill">${escapeHtml(String(it.year))}</span></div>
+      <div class="bhero-meta">${imdb}<span class="bhero-pill">${escapeHtml(typeMap[it.type]||it.type)}</span><span class="bhero-pill">${escapeHtml(String(it.year))}</span></div>
       <button class="bhero-btn" data-entry-id="${escapeHtml(it.id)}">${ic('layers')}<span>${t('viewDetails')}</span></button>
     </div>
+  </div>`;
+}
+let _heroTimer = null, _heroIdx = 0, _heroCount = 0;
+function heroGo(n){
+  const slides = document.querySelectorAll('.bhero-slide');
+  const dots = document.querySelectorAll('.bhero-dot');
+  if(!slides.length) return;
+  _heroIdx = ((n % slides.length) + slides.length) % slides.length;
+  slides.forEach((s,i)=> s.classList.toggle('on', i===_heroIdx));
+  dots.forEach((d,i)=> d.classList.toggle('on', i===_heroIdx));
+}
+function heroStart(){
+  clearInterval(_heroTimer);
+  if(_heroCount > 1) _heroTimer = setInterval(()=> heroGo(_heroIdx+1), 6000);
+}
+function renderBrowseHero(){
+  const list = browseFeaturedList(); if(!list.length) return '';
+  _heroIdx = 0; _heroCount = list.length;
+  const dots = list.map((_,i)=>`<button class="bhero-dot ${i===0?'on':''}" data-herodot="${i}" aria-label="slide ${i+1}"></button>`).join('');
+  const arrow = d => `<button class="bhero-arrow ${d}" data-heroarrow="${d}">${ic('chevron')}</button>`;
+  return `<div class="bhero" data-hero-carousel dir="ltr">
+    ${list.map(heroSlideHTML).join('')}
+    ${arrow('prev')}${arrow('next')}
+    <div class="bhero-dots">${dots}</div>
   </div>`;
 }
 function renderBrowseGrid(){
   const q = (state.browseSearch||'').trim().toLowerCase();
   let top = '';
-  if(!q){ // curated "newest" rows (hidden while searching)
+  if(!q){ // curated rows (hidden while searching)
     const types = state.browseType==='all' ? ['film','series','animation'] : [state.browseType];
     const labelFor = {film:t('browseFilms'), series:t('browseSeries'), animation:t('browseAnim')};
-    top = types.map(ty => {
-      const items = allItems().filter(it=>typeBucket(it.type)===ty)
+    top += types.map(ty => {
+      const items = allItems().filter(it=>typeBucket(it.type)===ty && it.imdb != null)
         .sort((a,b)=>parseYear(b.year)-parseYear(a.year)).slice(0,18);
       return nfStripRow(`${t('newestPrefix')} ${labelFor[ty]}`, items);
     }).join('');
+    // Coming Soon: strictly unreleased — future year or no known date, and no rating yet
+    const coming = allItems().filter(it => isComingSoon(it))
+      .sort((a,b)=>(parseYear(a.year)||9999)-(parseYear(b.year)||9999)).slice(0,18);
+    top += nfStripRow(t('comingSoonLabel'), coming);
   }
   const rows = BRAND_ORDER.map(bid => {
     let items = (DATA[bid]||[]).filter(it => {
@@ -2809,7 +3099,7 @@ function renderBrowseGrid(){
         </button>
         <button class="nf-row-all" data-enter-brand="${bid}"><span>${t('browseSeeAll')}</span>${ic('arrow')}</button>
       </div>
-      <div class="nf-strip">${items.map(it => movieCardHTML(it, bid)).join('')}</div>
+      ${stripWrap(items.map(it => movieCardHTML(it, bid)).join(''))}
     </div>`;
   }).filter(Boolean).join('');
   const body = top + rows;
@@ -2833,6 +3123,7 @@ function renderBrowseAll(){
 /* ===================== COMPOSE ===================== */
 function renderFull(){
   const app = document.getElementById('app');
+  loadWatchlist(); // always reflect the signed-in account (guests: empty)
   applyDir();
   setBrandTheme(state.brand);
   let body = '';
@@ -2857,7 +3148,15 @@ function renderFull(){
   }
   app.innerHTML = renderTopbar() + body + renderFooter() + renderModal() + renderMobileNav();
   initReveal();
+  if(state.page === 'browse') heroStart(); else clearInterval(_heroTimer);
 }
+// pause the hero while the pointer is over it
+document.addEventListener('mouseover', e => { if(e.target.closest && e.target.closest('[data-hero-carousel]')) clearInterval(_heroTimer); });
+document.addEventListener('mouseout', e => {
+  const from = e.target.closest && e.target.closest('[data-hero-carousel]');
+  const to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('[data-hero-carousel]');
+  if(from && !to) heroStart();
+});
 function renderMobileNav(){
   const homeI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
   const filmI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>`;
@@ -2890,7 +3189,7 @@ let _io = null;
 function initReveal(){
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const els = document.querySelectorAll('.reveal:not(.in)');
-  if(reduce || _skipReveal){ els.forEach(e => e.classList.add('in')); _skipReveal = false; initCardImages(); initPortalImages(); return; }
+  if(reduce || _skipReveal){ els.forEach(e => e.classList.add('in')); _skipReveal = false; initCardImages(); initPortalImages(); initHeroImages(); return; }
   if(_io) _io.disconnect();
   _io = new IntersectionObserver((entries) => {
     entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); _io.unobserve(en.target); } });
@@ -2904,6 +3203,35 @@ function initReveal(){
   });
   initCardImages();
   initPortalImages();
+  initHeroImages();
+}
+function initHeroImages(){
+  // hero slides demand REAL wide backdrops (w1280); slides without one leave the rotation
+  document.querySelectorAll('.bhero-img[data-hero-flag]').forEach(el => {
+    if(el.classList.contains('loaded')) return;
+    const fid = el.dataset.heroFlag;
+    const found = fid && findEntry(fid);
+    if(!found) return;
+    fetchMediaQueued(found.item).then(md => {
+      if(md && md.backdrop){
+        const img = new Image();
+        img.referrerPolicy = 'no-referrer';
+        img.onload = () => { el.style.backgroundImage = `url(${img.src})`; el.classList.add('loaded'); _backdropUrlById[fid] = img.src; };
+        img.onerror = () => dropHeroSlide(el);
+        img.src = md.backdrop;
+      } else dropHeroSlide(el);
+    });
+  });
+}
+function dropHeroSlide(imgEl){
+  const slide = imgEl.closest('.bhero-slide'); if(!slide) return;
+  const idx = slide.dataset.slide;
+  const dot = document.querySelector(`.bhero-dot[data-herodot="${idx}"]`);
+  const wasOn = slide.classList.contains('on');
+  slide.remove(); if(dot) dot.remove();
+  _heroCount = document.querySelectorAll('.bhero-slide').length;
+  if(wasOn && _heroCount) heroGo(0);
+  if(_heroCount <= 1) clearInterval(_heroTimer);
 }
 function initPortalImages(){
   // load flagship backdrops eagerly (home tiles + browse hero); small counts, high visibility
@@ -2974,6 +3302,37 @@ document.addEventListener('click', e => {
   if(e.target.closest('[data-auth-go]')){ closeAuthPanel(); /* fall through to data-nav below */ }
   const bt = e.target.closest('[data-browsetype]');
   if(bt){ state.browseType = bt.dataset.browsetype; const c=document.getElementById('content'); if(c){ c.innerHTML=renderBrowseGrid(); initReveal(); } document.querySelectorAll('[data-browsetype]').forEach(x=>x.classList.toggle('active', x.dataset.browsetype===state.browseType)); return; }
+  const hd = e.target.closest('[data-herodot]');
+  if(hd){ heroGo(+hd.dataset.herodot); heroStart(); return; }
+  const ha = e.target.closest('[data-heroarrow]');
+  if(ha){ heroGo(_heroIdx + (ha.dataset.heroarrow==='next'?1:-1)); heroStart(); return; }
+  const pad = e.target.closest('[data-paddle]');
+  if(pad){
+    const strip = pad.closest('.nf-strip-wrap')?.querySelector('.nf-strip');
+    if(strip){ const step = strip.clientWidth * .85 * (pad.dataset.paddle==='next' ? 1 : -1);
+      strip.scrollBy({left: document.documentElement.dir==='rtl' ? -step : step, behavior:'smooth'}); }
+    return;
+  }
+  const pu = e.target.closest('[data-playurl]');
+  if(pu){ e.stopPropagation(); playDirect(pu.dataset.playurl); return; }
+  const al = e.target.closest('[data-addlink]');
+  if(al){ e.stopPropagation();
+    const wrap = al.closest('.dmodal-links');
+    const label = wrap?.querySelector('[data-lf="label"]')?.value?.trim();
+    const url = wrap?.querySelector('[data-lf="url"]')?.value?.trim();
+    if(url && /^https?:\/\//i.test(url)){
+      const m = loadLinks(); const id = al.dataset.addlink;
+      (m[id] = m[id] || []).push({label: label || 'Link', url});
+      saveLinks(m); logEvent('link_add', id); refreshLinksSection(id);
+    }
+    return;
+  }
+  const rl = e.target.closest('[data-removelink]');
+  if(rl){ e.stopPropagation();
+    const m = loadLinks(); const id = rl.dataset.linkitem;
+    if(m[id]){ m[id].splice(+rl.dataset.removelink, 1); if(!m[id].length) delete m[id]; saveLinks(m); refreshLinksSection(id); }
+    return;
+  }
   // bookmark toggle — intercept before card opens
   const bm = e.target.closest('[data-bookmark]');
   if(bm){ e.stopPropagation();
@@ -3068,7 +3427,7 @@ async function tmdbFetch(item){
   const search = await apiGet(`https://api.themoviedb.org/3/search/${kind}?api_key=${TMDB_KEY}&query=${encodeURIComponent(item.name)}${yq}&include_adult=false`);
   const hit = search?.results?.[0];
   if(!hit) return null;
-  const details = await apiGet(`https://api.themoviedb.org/3/${kind}/${hit.id}?api_key=${TMDB_KEY}&language=${tmdbLang()}&append_to_response=videos,credits,external_ids`);
+  const details = await apiGet(`https://api.themoviedb.org/3/${kind}/${hit.id}?api_key=${TMDB_KEY}&language=${tmdbLang()}&append_to_response=videos,credits,external_ids&include_video_language=en,fa,null`);
   let overview = details?.overview || hit.overview || '';
   let overviewLang = (details?.overview && state.lang==='fa') ? 'fa' : 'en';
   if(!overview && state.lang==='fa'){
@@ -3285,6 +3644,7 @@ function renderEntryModal(item, brand){
         <div class="dmodal-source" style="display:none"></div>
         <div class="dmodal-trailer" style="display:none"></div>
         <div class="dmodal-cast" style="display:none"></div>
+        ${(() => { const lh = linksSectionHTML(item); return `<div class="dmodal-links" ${lh?'':'style="display:none"'}>${lh}</div>`; })()}
         <div class="dmodal-ext">
           <a class="ext-link" href="${imdbUrl}" target="_blank" rel="noopener">${ic('star')}<span>IMDb</span></a>
           <a class="ext-link" href="${wikiUrl}" target="_blank" rel="noopener">${ic('globe')}<span>Wikipedia</span></a>
