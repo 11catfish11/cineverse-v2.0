@@ -514,7 +514,10 @@ body::after{
 .sb-toggle svg{width:16px; height:16px;}
 
 @media(max-width:768px){
-  .brand-layout{flex-direction:column; gap:.8rem;}
+  /* stretch, not flex-start: otherwise .main-content is fit-content sized and the
+     tab pills' min-content (wider than the phone) blows the whole page out */
+  .brand-layout{flex-direction:column; gap:.8rem; align-items:stretch;}
+  .main-content{width:100%; min-width:0;}
   .sidebar{position:static; max-height:none; flex:unset; width:100%; display:none;}
   .sidebar.open{display:block;}
   .sb-toggle{display:inline-flex;}
@@ -685,10 +688,9 @@ body::after{
   :lang(fa) .bhero-title{font-size:1.35rem;}
   .bhero-meta{margin:.6rem 0 .8rem;}
   .bhero-btn{padding:.6rem 1.2rem; font-size:.84rem;}
-  .bhero-arrow{display:none;} /* no hover on touch; swipe-adjacent dots instead */
+  .bhero-arrow{display:none;} /* no hover on touch; swipe instead */
   .bhero-dots{left:0; right:0; justify-content:center;}
   .browse-bar{position:static;}
-  .browse-bar-title{width:100%;}
 }
 
 /* ===================== BROWSE FILTER BAR (chips + count; search lives in the topbar) ===================== */
@@ -1221,7 +1223,7 @@ const STR = {
     authLocalNote: "حساب شما فقط روی همین مرورگر ذخیره می‌شود (رایگان). برای همگام‌سازی بین دستگاه‌ها بعداً می‌شود فایربیس اضافه کرد.",
     signInToSave: "برای ذخیرهٔ آثار، وارد شوید",
     account: "حساب",
-    navBrowse: "همهٔ آثار", browseTitle: "کاوش در همهٔ آثار", browseEyebrow: "کتابخانه",
+    navBrowse: "همهٔ آثار",
     browseAllTypes: "همه", browseFilms: "فیلم‌ها", browseSeries: "سریال‌ها", browseAnim: "انیمیشن‌ها",
     browseSeeAll: "دیدن همه", badgeNew: "جدید",
     featuredLabel: "ویژه", viewDetails: "جزئیات", newestPrefix: "جدیدترین",
@@ -1330,7 +1332,7 @@ const STR = {
     authLocalNote: "Your account is saved on this browser only (free). Cross-device sync can be added later with Firebase.",
     signInToSave: "Sign in to save titles",
     account: "Account",
-    navBrowse: "Browse All", browseTitle: "Browse the whole library", browseEyebrow: "Library",
+    navBrowse: "Browse All",
     browseAllTypes: "All", browseFilms: "Films", browseSeries: "Series", browseAnim: "Animation",
     browseSeeAll: "See all", badgeNew: "NEW",
     featuredLabel: "Featured", viewDetails: "Details", newestPrefix: "Newest",
@@ -1914,7 +1916,7 @@ Object.assign(STR.fa, {
   tgPV:"تلگرام (پیام خصوصی)", tgCh:"کانال تلگرام", igLbl:"اینستاگرام",
   navCharacters:"شخصیت‌ها", charactersTitle:"شخصیت‌ها و بازیگران‌شان",
   charactersSub:"هر شخصیت را باز کنید تا ببینید چه بازیگرانی آن را بازی کرده‌اند و هر بازیگر در کدام آثار حضور دارد.",
-  playedBy:"بازیگران این شخصیت", actorsWord:"بازیگر", charTitles:"آثار در آرشیو", allCharacters:"همهٔ شخصیت‌ها",
+  playedBy:"بازیگران این شخصیت", actorsWord:"بازیگر", allCharacters:"همهٔ شخصیت‌ها",
 });
 Object.assign(STR.en, {
   filterImpLabel:"Importance:", universesWord:"universes", titlesCountWord:"titles",
@@ -1926,7 +1928,7 @@ Object.assign(STR.en, {
   tgPV:"Telegram (Direct Message)", tgCh:"Telegram Channel", igLbl:"Instagram",
   navCharacters:"Characters", charactersTitle:"Characters & their actors",
   charactersSub:"Open a character to see everyone who has played them — and which titles each actor appears in.",
-  playedBy:"Played by", actorsWord:"actors", charTitles:"Titles in the archive", allCharacters:"All characters",
+  playedBy:"Played by", actorsWord:"actors", allCharacters:"All characters",
 });
 
 /* ---------- STAR WARS ---------- */
@@ -2516,7 +2518,9 @@ function toggleBookmark(id, btnEl){
 }
 function playTrailer(key, frameEl){
   if(!frameEl || !key) return;
-  frameEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&rel=0" title="${t('trailerLabel')}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+  // the page-wide no-referrer meta (needed for Wikipedia images) makes YouTube refuse
+  // playback ("Video unavailable") — send the origin for this iframe only
+  frameEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&rel=0&playsinline=1" title="${t('trailerLabel')}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
 }
 
 /* ===================== TITLE LINKS (admin-managed sources; owner/admin add, everyone uses) =====
@@ -2733,6 +2737,7 @@ function enterBrand(brand){
 }
 function setView(v){ state.view = v; renderFull(); window.scrollTo({top:0}); }
 function navTo(p){ if(p==='characters') state.character = null; state.page = p; renderFull(); window.scrollTo({top:0}); }
+function openCharacter(id){ state.character = id; state.page = 'characters'; renderFull(); window.scrollTo({top:0}); }
 
 /* ===================== FILTER / GROUP ===================== */
 function brandItems(){ return DATA[state.brand] || []; }
@@ -3352,22 +3357,26 @@ function renderCharacterDetail(){
     ${blocks}
   </div>`;
 }
-/* actor portraits — TMDB person search, memoized by name */
+/* actor portraits — TMDB person search; the promise is memoized so an actor shared
+   by several cards (or grid + detail) is only ever fetched once, via the shared queue */
 const _personImgByName = {};
 function initCharFaces(){
   document.querySelectorAll('[data-person-face]').forEach(el => {
     if(el.classList.contains('loaded')) return;
     const name = el.dataset.personFace;
     if(!name || !TMDB_KEY) return;
-    const apply = url => { if(!url) return; el.style.backgroundImage = `url(${url})`; el.classList.add('loaded'); el.textContent = ''; };
-    if(_personImgByName[name] !== undefined){ apply(_personImgByName[name]); return; }
-    apiGet(`https://api.themoviedb.org/3/search/person?api_key=${TMDB_KEY}&query=${encodeURIComponent(name)}`)
-      .then(d => {
+    if(_personImgByName[name] === undefined){
+      _personImgByName[name] = queuedFetch(() =>
+        apiGet(`https://api.themoviedb.org/3/search/person?api_key=${TMDB_KEY}&query=${encodeURIComponent(name)}`)
+      ).then(d => {
         const p = d?.results?.[0];
-        const url = p && p.profile_path ? `${TMDB_IMG}w185${p.profile_path}` : null;
-        _personImgByName[name] = url;
-        apply(url);
+        return p && p.profile_path ? `${TMDB_IMG}w185${p.profile_path}` : null;
       });
+    }
+    _personImgByName[name].then(url => {
+      if(!url || !el.isConnected) return;
+      el.style.backgroundImage = `url(${url})`; el.classList.add('loaded'); el.textContent = '';
+    });
   });
 }
 
@@ -3729,17 +3738,7 @@ document.addEventListener('click', e => {
   if(bt){ state.browseType = bt.dataset.browsetype; refreshBrowseResults(); document.querySelectorAll('[data-browsetype]').forEach(x=>x.classList.toggle('active', x.dataset.browsetype===state.browseType)); return; }
   // topbar search: toggle open/closed; closing clears the query
   if(e.target.closest('[data-tbsearch-toggle]')){
-    const wrap = document.querySelector('.tb-search');
-    if(!wrap) return;
-    const willOpen = !wrap.classList.contains('open');
-    state.tbSearchOpen = willOpen;
-    wrap.classList.toggle('open', willOpen);
-    const inp = wrap.querySelector('[data-tbsearch]');
-    const btn = wrap.querySelector('[data-tbsearch-toggle]');
-    if(btn) btn.setAttribute('aria-expanded', willOpen);
-    if(inp) inp.tabIndex = willOpen ? 0 : -1;
-    if(willOpen){ if(inp) inp.focus(); }
-    else if(state.browseSearch){ state.browseSearch=''; if(inp) inp.value=''; if(state.page==='browse') refreshBrowseResults(); }
+    setTbSearch(!state.tbSearchOpen, true);
     return;
   }
   const hd = e.target.closest('[data-herodot]');
@@ -3785,7 +3784,7 @@ document.addEventListener('click', e => {
   if(tp){ e.stopPropagation(); playTrailer(tp.dataset.trailerPlay, tp.closest('.trailer-frame')); return; }
   // character card → its actors
   const ch = e.target.closest('[data-char]');
-  if(ch){ state.character = ch.dataset.char; state.page = 'characters'; renderFull(); window.scrollTo({top:0}); return; }
+  if(ch){ openCharacter(ch.dataset.char); return; }
   // entry-id check next so clicking anywhere else on the card opens the detail
   const entryEl = e.target.closest('[data-entry-id]');
   if(entryEl && !e.target.closest('[data-modal-close],[data-dmodal-close]')){
@@ -3812,6 +3811,7 @@ document.addEventListener('keydown', e => {
     if(auth.panelOpen){ closeAuthPanel(); }
     if(state.modal){ state.modal=null; const m=document.querySelector('.modal-back'); if(m) m.remove(); }
     if(state.entryModal){ closeEntryModal(); }
+    if(state.tbSearchOpen){ setTbSearch(false, true); }
   }
   if(e.key==='Enter' && document.querySelector('.auth-panel [data-authsubmit]')){
     const p=document.querySelector('.auth-panel');
@@ -3830,9 +3830,27 @@ document.addEventListener('keydown', e => {
     const brandEl = e.target.closest('[data-enter-brand]');
     if(brandEl){ e.preventDefault(); enterBrand(brandEl.dataset.enterBrand); return; }
     const chEl = e.target.closest('[data-char]');
-    if(chEl){ e.preventDefault(); state.character = chEl.dataset.char; state.page='characters'; renderFull(); window.scrollTo({top:0}); }
+    if(chEl){ e.preventDefault(); openCharacter(chEl.dataset.char); }
   }
 });
+/* single source of truth for the topbar search's open/closed DOM state */
+function setTbSearch(open, clearQuery){
+  state.tbSearchOpen = open;
+  const wrap = document.querySelector('.tb-search');
+  if(wrap){
+    wrap.classList.toggle('open', open);
+    const inp = wrap.querySelector('[data-tbsearch]');
+    const btn = wrap.querySelector('[data-tbsearch-toggle]');
+    if(inp) inp.tabIndex = open ? 0 : -1;
+    if(btn) btn.setAttribute('aria-expanded', String(open));
+    if(open){ if(inp) inp.focus(); }
+    else if(inp){ inp.blur(); if(clearQuery) inp.value = ''; }
+  }
+  if(!open && clearQuery && state.browseSearch){
+    state.browseSearch = '';
+    if(state.page === 'browse') refreshBrowseResults();
+  }
+}
 document.addEventListener('input', e => {
   if(e.target.matches('[data-search]')){ state.search=e.target.value; renderContentOnly(); }
   if(e.target.matches('[data-tbsearch]')){
@@ -3845,32 +3863,14 @@ document.addEventListener('input', e => {
     } else refreshBrowseResults();
   }
 });
-// closing the search with Escape, and auto-collapse when it loses focus while empty
-document.addEventListener('keydown', e => {
-  if(e.key==='Escape' && state.tbSearchOpen){
-    const wrap = document.querySelector('.tb-search');
-    state.tbSearchOpen = false;
-    if(wrap){
-      wrap.classList.remove('open');
-      const inp = wrap.querySelector('[data-tbsearch]');
-      if(inp){ inp.blur(); inp.tabIndex = -1; if(inp.value){ inp.value=''; } }
-      const btn = wrap.querySelector('[data-tbsearch-toggle]');
-      if(btn) btn.setAttribute('aria-expanded','false');
-    }
-    if(state.browseSearch){ state.browseSearch=''; if(state.page==='browse') refreshBrowseResults(); }
-  }
-});
+// auto-collapse the search when it loses focus while empty
 document.addEventListener('focusout', e => {
   if(!e.target.matches || !e.target.matches('[data-tbsearch]')) return;
   setTimeout(() => {
     const wrap = document.querySelector('.tb-search');
     const inp = wrap && wrap.querySelector('[data-tbsearch]');
     if(!wrap || !inp || inp.value.trim() || wrap.contains(document.activeElement)) return;
-    state.tbSearchOpen = false;
-    wrap.classList.remove('open');
-    inp.tabIndex = -1;
-    const btn = wrap.querySelector('[data-tbsearch-toggle]');
-    if(btn) btn.setAttribute('aria-expanded','false');
+    setTbSearch(false, false);
   }, 150);
 });
 document.addEventListener('change', e => {
@@ -3893,8 +3893,14 @@ function tmdbLang(){ return state.lang === 'fa' ? 'fa-IR' : 'en-US'; }
 function yearOf(item){ const m = String(item.year).match(/\d{4}/); return m ? m[0] : ''; }
 
 /* Pin catalog entries whose free-text search lands on the wrong TMDB record.
-   itemId → {kind:'movie'|'tv', id:<tmdb id>} — checked before any search.   */
-const TMDB_OVERRIDES = {};
+   itemId → {kind:'movie'|'tv', id:<tmdb id>} — checked before any search.
+   {skip:true} marks titles that aren't on TMDB at all (Wikipedia takes over). */
+const TMDB_OVERRIDES = {
+  m_iamgroot1: {kind:'tv', id:232125},   // search hits the "Groot's First Steps" short film
+  m_iamgroot2: {kind:'tv', id:232125},
+  ww_dh2:      {kind:'movie', id:12445}, // search returns Part 1 for the Part 2 query
+  d_authority: {skip:true},              // announced DC film, no TMDB page yet — search grabs "The Central Authority"
+};
 /* season/part suffixes and en-dashes confuse TMDB search — query the clean name */
 function tmdbQueryName(item){
   return item.name
@@ -3984,7 +3990,7 @@ async function wikiFetch(item){
   const lang = state.lang === 'fa' ? 'fa' : 'en';
   const key = item.id + '_' + lang;
   if(_wikiCache[key] !== undefined) return _wikiCache[key];
-  const query = `${item.name}${yearOf(item)?` ${yearOf(item)}`:''} film`;
+  const query = `${tmdbQueryName(item)}${yearOf(item)?` ${yearOf(item)}`:''} film`;
   let title = await wikiSearchTitle(query, lang);
   let summary = title ? await wikiSummaryFor(title, lang) : null;
   let enResult = null;
@@ -4027,14 +4033,15 @@ function fetchMedia(item){
   return p;
 }
 
-/* concurrency-limited variant for grid lazy-loading */
+/* concurrency-limited fetching — posters and person photos share one queue */
 let _mediaInFlight = 0; const _mediaQueue = []; const MEDIA_MAX = 6;
-function fetchMediaQueued(item){
+function queuedFetch(runner){
   return new Promise(resolve => {
-    const run = () => { _mediaInFlight++; fetchMedia(item).then(r => { _mediaInFlight--; resolve(r); _drainMedia(); }); };
+    const run = () => { _mediaInFlight++; runner().then(r => { _mediaInFlight--; resolve(r); _drainMedia(); }); };
     if(_mediaInFlight < MEDIA_MAX) run(); else _mediaQueue.push(run);
   });
 }
+function fetchMediaQueued(item){ return queuedFetch(() => fetchMedia(item)); }
 function _drainMedia(){ while(_mediaInFlight < MEDIA_MAX && _mediaQueue.length) _mediaQueue.shift()(); }
 
 /* ===================== ENTRY DETAIL MODAL ===================== */
